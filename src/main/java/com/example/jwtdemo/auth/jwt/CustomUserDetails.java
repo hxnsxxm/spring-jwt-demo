@@ -1,6 +1,6 @@
-package com.example.jwtdemo.jwt;
+package com.example.jwtdemo.auth.jwt;
 
-import com.example.jwtdemo.entity.UserEntity;
+import com.example.jwtdemo.auth.entity.UserEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,15 +41,15 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getPassword() {
 
-        return userEntity.getPassword();
-        //return null;
+        //return userEntity.getPassword();
+        return null;
     }
 
     @Override
     public String getUsername() {
 
-        return userEntity.getUsername();
-        //return null;
+        //return userEntity.getUsername();
+        return null;
     }
 
     @Override

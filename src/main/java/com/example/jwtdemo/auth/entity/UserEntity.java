@@ -1,4 +1,4 @@
-package com.example.jwtdemo.entity;
+package com.example.jwtdemo.auth.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,9 +16,10 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private String username;
-    private String password;
+    //private String username;
+    //private String password;
 
     private String role;
-    //private String memberId;
+    private String socialId;
+    private String socialProvider;
 }
