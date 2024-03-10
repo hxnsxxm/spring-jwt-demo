@@ -104,7 +104,8 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
                 "/social-login",
-                "/h2-console/**"
+                "/h2-console/**",
+                "/token"
         );
     }
 }

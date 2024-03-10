@@ -1,11 +1,12 @@
 package com.example.jwtdemo.auth.filter;
 
 import com.example.jwtdemo.auth.dto.UserDto;
+import com.example.jwtdemo.auth.entity.UserEntity;
+import com.example.jwtdemo.auth.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,12 +20,14 @@ import org.springframework.util.StringUtils;
 @Component
 public class JWTUtil {
 
+    private UserRepository userRepository;
     private SecretKey secretKey;
 
     private Long ACCESS_TOKEN_EXPIRATION_PERIOD = 600000L;
     private Long REFRESH_TOKEN_EXPIRATION_PERIOD = 3600000L;
 
-    public JWTUtil(@Value("${spring.jwt.secret}")String secret) {
+    public JWTUtil(UserRepository userRepository, @Value("${spring.jwt.secret}")String secret) {
+        this.userRepository = userRepository;
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
@@ -69,22 +72,31 @@ public class JWTUtil {
 
     public Map<String, String> initToken(UserDto savedOrFindUser) {
         Map<String, String> tokenMap = new HashMap<>();
-        //String accessToken = generateAccessToken(savedOrFindUser);
-        //String refreshToken = generateRefreshToken(savedOrFindUser);
+        String accessToken = generateAccessToken(savedOrFindUser);
+        String refreshToken = generateRefreshToken(savedOrFindUser);
 
-        //tokenMap.put("accessToken", accessToken);
-        //tokenMap.put("refreshToken", refreshToken);
+        tokenMap.put("accessToken", accessToken);
+        tokenMap.put("refreshToken", refreshToken);
 
-        //updRefreshTokenInDB(refreshToken, savedOrFindUser);
+        updRefreshTokenInDB(refreshToken, savedOrFindUser);
 
-        //임시 토큰 발급
-        tokenMap.put("Bearer", generateToken(savedOrFindUser));
+        //테스트용 임시 토큰 발급
+        //tokenMap.put("Bearer", generateToken(savedOrFindUser));
 
         return tokenMap;
     }
 
-    public String generateToken(UserDto userDTO) {
-        return createJwt(ACCESS_TOKEN_EXPIRATION_PERIOD, userDTO);
+    //테스트용 임시 토큰 발급
+    public String generateToken(UserDto userDto) {
+        return createJwt(ACCESS_TOKEN_EXPIRATION_PERIOD, userDto);
+    }
+
+    public String generateAccessToken(UserDto userDto) {
+        return createJwt(ACCESS_TOKEN_EXPIRATION_PERIOD, userDto);
+    }
+
+    public String generateRefreshToken(UserDto userDto) {
+        return createJwt(REFRESH_TOKEN_EXPIRATION_PERIOD, userDto);
     }
 
     public String extractTokenFromHeader(HttpServletRequest request) {
@@ -95,4 +107,50 @@ public class JWTUtil {
             throw new RuntimeException("토큰이 필요합니다");
         }
     }
+
+    public boolean validateAccessToken(String accessToken) {
+        if(accessToken == null || accessToken.length() <= 0) {
+            throw new RuntimeException("액세스 토큰이 필요합니다.");
+        }
+
+        boolean isTokenExpired = checkTokenExpired(accessToken);
+        if(isTokenExpired == true) {
+            throw new RuntimeException("토큰이 만료되었습니다.");
+        } else {
+            return isTokenExpired;
+        }
+    }
+
+
+    public Boolean validateRefreshToken(String refreshToken) {
+        UserEntity user = userRepository.findByRefreshToken(refreshToken);
+
+        if(user == null) {
+            new RuntimeException("토큰이 만료되었습니다.");
+        }
+
+        String refreshTokenInDB = user.getRefreshToken();
+        if(!refreshToken.equals(refreshTokenInDB) || checkTokenExpired(refreshTokenInDB)) {
+            new RuntimeException("토큰이 만료되었습니다.");
+        }
+
+        return true;
+    }
+
+    public Map<String, String> refreshingAccessToken(UserDto userDto, String refreshToken) {
+        Map<String, String> tokenMap = new HashMap<>();
+        String accessToken = generateAccessToken(userDto);
+
+        tokenMap.put("accessToken", accessToken);
+        tokenMap.put("refreshToken", refreshToken);
+
+        return tokenMap;
+    }
+
+
+    private void updRefreshTokenInDB(String refreshToken, UserDto savedOrFindUser) {
+        savedOrFindUser.setRefreshToken(refreshToken);
+        userRepository.save(savedOrFindUser.toEntity());
+    }
+
 }

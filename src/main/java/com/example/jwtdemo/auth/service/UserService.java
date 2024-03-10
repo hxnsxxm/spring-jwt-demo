@@ -33,6 +33,18 @@ public class UserService {
             user = userRepository.findBySocialIdAndSocialProvider(socialId, socialProvider);
         }
 
+        userDto.setId(user.getId());
+        userDto.setSocialId(user.getSocialId());
+        userDto.setSocialProvider(user.getSocialProvider());
+        userDto.setRole(user.getRole());
+
+        return userDto;
+    }
+
+    public UserDto getUserInfoByUsingRefreshToken(String refreshToken) {
+        UserEntity user = userRepository.findByRefreshToken(refreshToken);
+
+        UserDto userDto = new UserDto();
         userDto.setSocialId(user.getSocialId());
         userDto.setSocialProvider(user.getSocialProvider());
         userDto.setRole(user.getRole());

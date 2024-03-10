@@ -26,29 +26,52 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    //테스트용 임시 토큰 발급
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+//
+//        if (checkTokenValid(request)) {
+//            filterChain.doFilter(request, response);
+//        } else {
+//            throw new RuntimeException("알 수 없는 오류가 발생함");
+//        }
+//    }
+//
+//    private boolean checkTokenValid(HttpServletRequest request) {
+//        String token = jwtUtil.extractTokenFromHeader(request);
+//        if (!jwtUtil.validateToken(token))
+//            securityService.saveUserInSecurityContext(token);
+//
+//        return true;
+//    }
 
-        if (checkTokenValid(request)) {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        if(checkAccessTokenValid(request)) {
             filterChain.doFilter(request, response);
         } else {
-            throw new RuntimeException("알 수 없는 오류가 발생함");
+            throw new RuntimeException("알 수 없는 오류가 발생했습니다.");
         }
     }
 
-    private boolean checkTokenValid(HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromHeader(request);
-        if (!jwtUtil.validateToken(token))
-            securityService.saveUserInSecurityContext(token);
-
+    private boolean checkAccessTokenValid(HttpServletRequest request) {
+        String accessToken = jwtUtil.extractTokenFromHeader(request);
+        if(!jwtUtil.validateAccessToken(accessToken)) {
+            securityService.saveUserInSecurityContext(accessToken);
+        }
         return true;
     }
+
+
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String[] excludePath = {
                 "/social-login",
-                "/h2-console/**"
+                "/h2-console/**",
+                "/token"
         };
         String path = request.getRequestURI();
 

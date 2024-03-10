@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     UserEntity findBySocialIdAndSocialProvider(String socialId, String socialProvider);
     Boolean existsBySocialIdAndSocialProvider(String socialId, String socialProvider);
+
+    UserEntity findByRefreshToken(String refreshToken);
 }

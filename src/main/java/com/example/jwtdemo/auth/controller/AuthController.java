@@ -6,6 +6,7 @@ import com.example.jwtdemo.auth.dto.UserDto;
 import com.example.jwtdemo.auth.filter.JWTUtil;
 import com.example.jwtdemo.auth.service.SecurityService;
 import com.example.jwtdemo.auth.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,15 @@ public class AuthController {
         securityService.saveUserInSecurityContext(loginDto);
         Map<String, String> tokenMap = jwtUtil.initToken(savedOrFindUser);
 
+        return ResponseEntity.ok(tokenMap);
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity<Map<String, String>> refreshingAccessToken(HttpServletRequest request) {
+        String refreshToken = jwtUtil.extractTokenFromHeader(request);
+        jwtUtil.validateRefreshToken(refreshToken);
+        UserDto userDto = userService.getUserInfoByUsingRefreshToken(refreshToken);
+        Map<String, String> tokenMap = jwtUtil.refreshingAccessToken(userDto, refreshToken);
         return ResponseEntity.ok(tokenMap);
     }
 }
